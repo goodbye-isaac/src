@@ -48,9 +48,9 @@ describe 'タスク管理機能', type: :system, js: true do
 
     before do
       visit new_task_path
-      fill_in 'Name', with: task_name
+      fill_in '名称', with: task_name
 
-      click_button 'Create Task'
+      click_button '登録する'
     end
     
     context '新規作成画面で名称を入力したとき' do
@@ -66,7 +66,7 @@ describe 'タスク管理機能', type: :system, js: true do
 
       it 'エラーとなる' do
         within '#error_explanation' do
-          expect(page).to have_content "Name can't be blank"
+          expect(page).to have_content '名称を入力してください'
         end
       end
     end
