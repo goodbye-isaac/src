@@ -3,7 +3,12 @@ before_action :set_task, only: [:show, :edit, :update, :destroy]
 
   def index
     @q = current_user.tasks.ransack(params[:q])
-    @tasks = @q.result(distinct: true)
+    @tasks = @q.result(distinct: true).order(created_at: "DESC").page(params[:page]).per(50)
+
+    respond_to do |format|
+      format.html
+      format.csv { send_data @tasks.generate_csv, fillname: "tasks-#{Time.zone.now.strftime('%Y%m%d%S')}.csv" }
+    end
   end
 
   def show
@@ -22,6 +27,7 @@ before_action :set_task, only: [:show, :edit, :update, :destroy]
     end
 
     if @task.save
+      TaskMailer.creation_email(@task).deliver_now
       redirect_to tasks_url, notice: "タスク「#{@task.name}」を登録しました。"
     else
       render :new
@@ -33,12 +39,12 @@ before_action :set_task, only: [:show, :edit, :update, :destroy]
 
   def update
     @task.update!(task_params)
-    redirect_to tasks_url, notice: "タスク「#{task.name}を更新しました。"
+    redirect_to tasks_url, notice: "タスク「#{@task.name}を更新しました。"
   end
 
   def destroy
     @task.destroy
-    redirect_to tasks_url, notice: "タスク「#{task.name}」を削除しました。"
+    #head :no_content
   end
 
   def confirm_new
@@ -49,11 +55,10 @@ before_action :set_task, only: [:show, :edit, :update, :destroy]
   private
 
   def task_params
-    params.require(:task).permit(:name, :description)
+    params.require(:task).permit(:name, :description, :image)
   end
 
   def set_task
     @task = current_user.tasks.find_by(id: params[:id])
   end
-
 end
